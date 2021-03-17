@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 
 QString Library::pathToMetaData=QDir::homePath()+"\\"+"\\.config\\legendary\\metadata";
 
@@ -12,28 +13,32 @@ Library::Library()
 
 void Library::loadLibrary()
 {
-    int x;
-    QString homePath=QDir::homePath(),data,appTitle;
+    int gameCount,i;
+    QString gameName,app_name,imgUrl;
+    QByteArray data;
     QFile file;
-    QString path=homePath+"\\.config\\legendary\\metadata";
-    QDir test(path);
-    QStringList testlist = test.entryList();
-    x=testlist.size();
-    for(int i=2;i<x;i++)
+    QJsonArray array;
+    QDir files(pathToMetaData);
+    QStringList fileList = files.entryList();
+    gameCount=fileList.size();
+    for(i=2;i<gameCount;i++)
     {
-        file.setFileName(path+"\\"+testlist[i]);
+        file.setFileName(pathToMetaData+"\\"+fileList[i]);
         file.open(QIODevice::ReadOnly | QIODevice::Text);
         data=file.readAll();
         file.close();
-        QJsonDocument sd = QJsonDocument::fromJson(data.toUtf8());
+        QJsonDocument sd = QJsonDocument::fromJson(data);
         QJsonObject sett2 = sd.object();
-        appTitle=sett2.value(QString("app_title")).toString();
-        gameNames.append(appTitle);
+        gameName=sett2.value("app_title").toString();
+        app_name=sett2.value("app_name").toString();
+        array=sett2.value("metadata").toObject().value("keyImages").toArray();
+        imgUrl=array[0].toObject().value("url").toString();
+        gameList.append(new Game(gameName,app_name,imgUrl));
     }
 
 }
 
-QStringList Library::getGameNames() const
+QList<Game*> Library::getGameList() const
 {
-    return gameNames;
+    return gameList;
 }
